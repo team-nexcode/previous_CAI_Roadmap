@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Result</title>
+    <link rel="stylesheet" href="result.css">
+</head>
+<body>
+    <div class="result-wrapper">
+        <h1>로그인 결과</h1>
+        <pre id="result"></pre>
+        <button onclick="goBack()">돌아가기</button>
+    </div>
+
+    <script>
+        // sessionStorage에서 데이터 가져오기
+        const resultDiv = document.getElementById("result");
+        const loginData = sessionStorage.getItem("loginResult");
+        if (loginData) {
+            const parsed = JSON.parse(loginData);
+            resultDiv.textContent = JSON.stringify(parsed, null, 2);
+        } else {
+            resultDiv.textContent = "❌ 결과가 없습니다.";
+        }
+
+        function goBack() {
+            window.location.href = "login.html";
+        }
+    </script>
+</body>
+</html>

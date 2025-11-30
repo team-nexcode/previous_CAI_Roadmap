@@ -1,0 +1,41 @@
+/* loginForm.css */
+.container {
+    width : 300px;
+    height : 280px;
+    border : 1px solid black;
+    border-radius : 30px;
+    background-color : rgb(255, 235, 197);
+    padding : 0px 15px;
+    text-align : center;
+    box-sizing : border-box;
+    margin : 100px auto;
+}
+i {
+    font-size : 25px;
+    color : rgb(116, 116, 116);
+}
+p {
+    font-size : 30px;
+    font-weight : bold;
+}
+input {
+    width : 228px;
+    height : 36px;
+    margin-bottom : 10px;
+    background-color : #fff9e9;
+    border : 1px solid black;
+    border-radius : 5px;
+    padding-left : 15px;
+    box-sizing : border-box;
+}
+.btnLogin {
+    width : 150px;
+    height : 40px;
+    border-radius : 20px;
+    background-color : #373f3c;
+    border : 1px solid black;
+    color : white;
+    font-weight : bold;
+    margin-top : 10px;
+    margin-bottom : 20px;
+}

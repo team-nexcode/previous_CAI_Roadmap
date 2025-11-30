@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>LOGIN</title>
+    <link rel="stylesheet" href="login.css">
+</head>
+<body>
+    <div class="login-wrapper">
+        <h1 class="login-title">LOGIN</h1>
+        <form method="post" id="login-form">
+            <input type="text" name="userName" placeholder="사용자 아이디" required>
+            <input type="password" name="userPassword" placeholder="비밀번호" required>
+            <label class="remember-row" for="remember-check">
+                <input type="checkbox" id="remember-check" name="remember">
+                아이디 저장하기
+            </label>
+            <input type="submit" value="로그인">
+        </form>
+        <div class="bottom-text">
+            <img src="/img/CAI Roadmap logo.png" alt="CAI Roadmap logo" class="logo-img">
+        </div>
+    </div>
+    
+    <script src="login.js"></script>
+</body>
+</html>

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CAI Roadmap</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: sans-serif; }
+  </style>
+</head>
+<body class="min-h-screen bg-orange-50">
+  <!-- 상단 포인트 바 -->
+  <div class="h-1 w-full bg-orange-500"></div>
+
+  <!-- 헤더 -->
+  <header class="w-full bg-white/90 shadow-sm">
+    <div class="mx-auto max-w-7xl px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="h-10 w-10 rounded-full border-2 border-orange-500 bg-white shadow-sm"></div>
+        <div class="flex flex-col">
+          <span class="text-sm text-gray-500">Nexcode</span>
+          <span class="font-bold text-lg tracking-tight text-orange-600">CAI Roadmap</span>
+        </div>
+      </div>
+      <div class="text-sm sm:text-base text-gray-700 select-none flex justify-between">
+        <span class="text-black-600 break-keep" id="idText">2025000001</span>
+        <span class="text-black-600 break-keep ml-3" id="nameText">이름</span>
+        <span class="font-semibold text-orange-600 break-keep ml-5 cursor-pointer" id="loginInfo">로그아웃</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="mx-auto max-w-7xl px-4 py-6 grid grid-cols-1 lg:grid-cols-12 gap-4">
+    <!-- 체크리스트 -->
+    <aside class="lg:col-span-4 xl:col-span-3 bg-white rounded-2xl shadow-sm p-4 h-fit lg:sticky lg:top-4">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="font-semibold text-gray-800">졸업 체크리스트</h2>
+        <span class="text-xs text-gray-500" id="progressLabel">0/9 완료</span>
+      </div>
+      <ul id="todoList" class="space-y-2">
+        <li class="flex items-center gap-2">
+          <input type="checkbox" class="todo h-4 w-4 text-orange-600" data-title="공통교양 25학점" /> 공통교양 25학점
+        </li>
+        <li class="flex items-center gap-2">
+          <input type="checkbox" class="todo h-4 w-4 text-orange-600" data-title="기본소양 6학점" /> 기본소양 6학점
+        </li>
+        <li class="flex items-center gap-2">
+          <input type="checkbox" class="todo h-4 w-4 text-orange-600" data-title="BSM 21학점" /> BSM 21학점
+        </li>
+        <li class="flex items-center gap-2">
+          <input type="checkbox" class="todo h-4 w-4 text-orange-600" data-title="전공 72학점" /> 전공 72학점
+        </li>
+        <li class="flex items-center gap-2">
+          <input type="checkbox" class="todo h-4 w-4 text-orange-600" data-title="취득학점 130학점" /> 취득학점 130학점
+        </li>
+        <li class="flex items-center gap-2">
+          <input type="checkbox" class="todo h-4 w-4 text-orange-600" data-title="평점평균 2.0" /> 평점평균 2.0
+        </li>
+        <li class="flex items-center gap-2">
+          <input type="checkbox" class="todo h-4 w-4 text-orange-600" data-title="외국어시험 TOEIC 700" /> 외국어시험 TOEIC 700
+        </li>
+        <li class="flex items-center gap-2">
+          <input type="checkbox" class="todo h-4 w-4 text-orange-600" data-title="영어강의 4개 과목" /> 영어강의 4개 과목
+        </li>
+        <li class="flex items-center gap-2">
+          <input type="checkbox" class="todo h-4 w-4 text-orange-600" data-title="1. 종합설계1 및 종합설계2 이수 or 2. 종합설계1 이수 및 개별연구 이수수" /> 1. 종합설계1 및 종합설계2 이수 or 2. 종합설계1 이수 및 개별연구 이수
+        </li>
+      </ul>
+    </aside>
+
+    <!-- 메인 -->
+    <main class="lg:col-span-8 xl:col-span-9">
+      <nav class="bg-white rounded-2xl shadow-sm p-2 mb-4">
+        <ul class="flex flex-wrap">
+          <li class="m-1"><button class="tab px-5 py-2.5 rounded-2xl text-orange-700 hover:bg-orange-100" data-tab="recommend">추천 강의</button></li>
+          <li class="m-1"><button class="tab px-5 py-2.5 rounded-2xl text-orange-700 hover:bg-orange-100" data-tab="courses">수강계획</button></li>
+          <li class="m-1"><button class="tab px-5 py-2.5 rounded-2xl text-orange-700 hover:bg-orange-100" data-tab="progress">달성률</button></li>
+        </ul>
+      </nav>
+
+      <section class="bg-white rounded-2xl p-6 shadow-sm min-h-[280px] text-gray-700">
+        <div id="tabContent"></div>
+      </section>
+    </main>
+  </div>
+
+<script>
+  // sessionStorage에서 데이터 가져오기
+  const studentData = sessionStorage.getItem("studentData");
+  const idText = document.getElementById("idText");
+  const nameText = document.getElementById("nameText");
+  const loginInfo = document.getElementById("loginInfo");
+
+  if (studentData) {
+    const parsed = JSON.parse(studentData);
+    idText.textContent = parsed.STD_NO;
+    nameText.textContent = parsed.STD_NM;
+    loginInfo.textContent = "로그아웃";
+
+    // ✅ 로그아웃 기능 추가
+    loginInfo.addEventListener("click", () => {
+      sessionStorage.removeItem("studentData"); // 세션 삭제
+      window.location.href = "/login.html";     // 로그인 화면 이동
+    });
+
+  } else {
+    nameText.textContent = "";
+    loginInfo.textContent = "로그인";
+    window.location.href = "/login.html";
+  }
+
+  const tabs = document.querySelectorAll('.tab');
+  const tabContent = document.getElementById('tabContent');
+  const todoList = document.querySelectorAll('.todo');
+  const progressLabel = document.getElementById('progressLabel');
+
+  function renderTab(tab) {
+    if (tab === 'recommend') {
+      tabContent.innerHTML = `<h3 class='font-semibold text-lg'>추천 강의</h3><p class='text-sm text-gray-600'>추천 강의 리스트가 여기에 표시됩니다.</p>`;
+    } else if (tab === 'courses') {
+      tabContent.innerHTML = `<h3 class='font-semibold text-lg'>수강계획</h3><p class='text-sm text-gray-600'>학기별 계획과 과목을 관리하는 영역입니다.</p>`;
+    } else if (tab === 'progress') {
+      const done = document.querySelectorAll('.todo:checked').length;
+      const total = todoList.length;
+      const percent = Math.round((done/total)*100);
+      tabContent.innerHTML = `<h3 class='font-semibold text-lg'>달성률</h3><p class='text-sm text-gray-600'>체크리스트 기준으로 졸업요건 달성률을 확인하세요.</p>
+      <div class='w-full bg-gray-200 rounded-full h-4'>
+        <div class='bg-orange-500 h-4 rounded-full text-xs text-white flex items-center justify-center' style='width:${percent}%'>${percent}%</div>
+      </div>`;
+    }
+  }
+
+  tabs.forEach(btn => {
+    btn.addEventListener('click', () => {
+      tabs.forEach(b => b.classList.remove('bg-orange-500','text-white'));
+      btn.classList.add('bg-orange-500','text-white');
+      renderTab(btn.dataset.tab);
+    });
+  });
+
+  todoList.forEach(chk => {
+    chk.addEventListener('change', () => {
+      const done = document.querySelectorAll('.todo:checked').length;
+      progressLabel.innerText = `${done}/${todoList.length} 완료`;
+    });
+  });
+
+  // 초기 탭
+  renderTab('recommend');
+  document.querySelector('[data-tab="recommend"]').classList.add('bg-orange-500','text-white');
+</script>
+</body>
+</html>

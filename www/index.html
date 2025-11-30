@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>CAI Roadmap</title>
+	<link rel="icon" type="image/png" href="/img/favicon.png">
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+
+	<!-- Tailwind safelist -->
+	<script>
+		window.tailwind = window.tailwind || {};
+		window.tailwind.config = {
+			safelist: [
+				'col-start-1','col-start-2','col-start-3','col-start-4','col-start-5','col-start-6','col-start-7',
+				'col-end-2','col-end-3','col-end-4','col-end-5','col-end-6','col-end-7','col-end-8'
+			]
+		};
+	</script>
+	<script src="https://cdn.tailwindcss.com"></script>
+	<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/culori@4.0.2"></script>
+	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+	<style>
+		/* 전체 래퍼(중앙 정렬용) */
+		.clipboard-wrap { display:flex; justify-content:center; padding:24px; background:transparent; }
+		/* 나무판 배경 */
+		.clipboard-board{ position:relative; width:100%; max-width:400px; border-radius:12px;
+		  background:linear-gradient(180deg,#caa57a 0%,#b8834f 100%); padding-top:42px; box-shadow:0 10px 20px rgba(0,0,0,.15);}
+		.clipboard-board .clip{ position:absolute; top:6px; left:50%; transform:translateX(-50%); width:90px; height:26px;
+		  background:linear-gradient(180deg,#d8d8d8,#a8a8a8); border-radius:8px; box-shadow:0 3px 6px rgba(0,0,0,.2), inset 0 2px 6px rgba(255,255,255,.45);
+		  display:flex; align-items:center; justify-content:center;}
+		.clipboard-board .clip::after{ content:""; position:absolute; width:12px; height:8px; background:rgba(0,0,0,.06); border-radius:3px; top:8px;}
+		.paper{ background:#fff; margin:0 18px 18px; border-radius:8px; padding:18px; box-shadow:0 6px 14px rgba(0,0,0,.08); transform:translateY(6px);}
+		.paper-header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;}
+		.title{ font-size:18px; font-weight:700; color:#333; margin:0;}
+		.progress-text{ font-size:13px; color:#666;}
+		.progress-track{ width:100%; height:8px; background:#f0f0f0; border-radius:99px; overflow:hidden; margin-bottom:10px; box-shadow:inset 0 1px 0 rgba(255,255,255,.5);}
+		.progress-bar{ height:100%; background:linear-gradient(90deg,#ff9b3b,#ff7a00); transition:width 400ms ease; width:0%;}
+		.todo-list{ list-style:none; padding:0; margin:0; display:grid; gap:8px;}
+		.todo-item{ display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:8px; transition:background 200ms; }
+		.todo-item:hover{ background:rgba(255,122,0,.06);}
+		.todo-item input[type="checkbox"].todo{ width:18px; height:18px; cursor:pointer; accent-color:#ff7a00; flex:0 0 auto;}
+		.todo-item span{ color:#222; font-size:15px; line-height:1; }
+		.paper::before,.paper::after{ content:""; position:absolute; left:24px; right:24px; height:1px; background:rgba(0,0,0,.02); transform:translateY(-2px);}
+		@media (max-width:440px){ .clipboard-board{ width:92%; } }
+		/* 이수체계도 하이라이트 */
+		.course-card.selected{ border-color:#f97316; background-color:#fff7ed; border-width:2px; transform:scale(1.02); }
+		.course-card.prereq{ border-color:#3b82f6; background-color:#eff6ff; border-width:2px; }
+		.course-card.postreq{ border-color:#22c55e; background-color:#f0fdf4; border-width:2px; }
+		.course-card.opacity-30{ opacity:.4; }
+		body{ font-family:sans-serif; }
+		/* iOS Wheel Picker */
+		.picker{ position:relative; height:168px; width:140px; overflow:hidden; border-radius:12px; border:1px solid #e5e7eb; background:#fff;}
+		.picker .mask{ pointer-events:none; position:absolute; inset:0; background:linear-gradient(to bottom,
+			rgba(255,255,255,.9) 0%, rgba(255,255,255,.7) 20%, rgba(255,255,255,0) 40%, rgba(255,255,255,0) 60%, rgba(255,255,255,.7) 80%, rgba(255,255,255,.9) 100%);}
+		.picker .scroller{ height:100%; overflow-y:auto; scroll-snap-type:y mandatory; scrollbar-width:none;}
+		.picker .scroller::-webkit-scrollbar{ display:none;}
+		.picker-item{ height:32px; line-height:32px; text-align:center; font-size:14px; color:#374151; scroll-snap-align:center; user-select:none;}
+		.picker .selection-line{ pointer-events:none; position:absolute; left:8px; right:8px; top:50%; transform:translateY(-50%);
+			height:32px; border-top:1px solid #f97316; border-bottom:1px solid #f97316; border-radius:6px;}
+		/* 탭바 가로 스크롤 숨김 */
+		.no-scrollbar::-webkit-scrollbar{ display:none; }
+		.no-scrollbar{ -ms-overflow-style:none; scrollbar-width:none; }
+
+		/* ===== 탭바: '각진' 하단 바 인디케이터 스타일 (다른 기능 불변) ===== */
+		.tab{
+			position: relative;
+			border-radius: 0 !important;            /* 각진 느낌 */
+			background: transparent !important;     /* 알약 배경 제거 */
+			color: #c2410c; /* text-orange-700 근사값 */
+		}
+		.tab:hover{ background: transparent !important; }
+		/* 기본: 얇고 연한 바(호버 시 나타남) */
+		.tab::after{
+			content:"";
+			position:absolute;
+			left:12px; right:12px;
+			bottom:-3px;
+			height:2px;
+			background: rgba(249,115,22,0.28);      /* orange-500 @ 28% */
+			transform: scaleX(0);
+			transform-origin: left center;
+			transition: transform .25s ease, background-color .25s ease, height .25s ease;
+		}
+		.tab:hover::after{
+			transform: scaleX(1);
+			background: rgba(249,115,22,0.45);      /* 조금 진하게 */
+		}
+		/* 활성: 두껍고 진한 바. 기존 활성 클래스(bg-orange-500 text-white)를 재해석 */
+		.tab.bg-orange-500::after,
+		.tab[aria-selected="true"]::after{
+			transform: scaleX(1);
+			height:3px;
+			background:#ea580c;                    /* orange-600 */
+		}
+		/* 활성일 때 글자색은 오렌지, 배경은 투명 (white 텍스트가 안 보이는 문제 방지) */
+		.tab.bg-orange-500,
+		.tab.text-white{
+			color:#ea580c !important;
+			background:transparent !important;
+		}
+	</style>
+</head>
+<body class="min-h-screen bg-orange-50 overflow-y-scroll">
+	<div class="h-1 w-full bg-orange-500"></div>
+
+	<!-- 상단 고정 헤더 -->
+	<header class="w-full bg-white/90 shadow-sm sticky top-0 z-20">
+		<div class="mx-auto max-w-7xl px-4 py-3 flex items-center justify-between">
+			<div class="flex items-center">
+				<img id="logoHome" src="/img/new CAI Roadmap logo.png" alt="CAI Roadmap Logo" class="max-h-10 max-w-41 h-auto w-auto min-h-7 min-w-28 cursor-pointer" />
+			</div>
+			<div class="text-sm sm:text-base text-gray-700 select-none flex-shrink items-center">
+				<div class="flex items-center gap-[clamp(8px,2vw,16px)] ml-5">
+					<span class="text-black-600 break-keep" id="idText"></span>
+					<span class="text-black-600 break-keep" id="nameText"></span>
+					<nav>
+						<a href="/mypage.html" id="myInfoTab" class="whitespace-nowrap text-base break-keep font-semibold text-gray-600 hover:text-orange-600 hover:border-b-2 hover:border-orange-500 pb-1">나의 정보</a>
+					</nav>
+					<span class="font-semibold text-orange-600 break-keep cursor-pointer" id="loginInfo"></span>
+				</div>
+			</div>
+		</div>
+	</header>
+
+	<!-- 탭바 (상단 고정 바로 아래) -->
+	<nav class="w-full bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70 shadow-sm z-10">
+		<div class="mx-auto max-w-7xl px-4">
+			<ul class="no-scrollbar flex gap-2 py-2 overflow-x-auto justify-start sm:justify-center" role="tablist" aria-label="메인 탭">
+				<li class="shrink-0 m-1"><button class="tab px-5 py-2.5 rounded-2xl text-orange-700 hover:bg-orange-100" data-tab="recommend">추천 강의</button></li>
+				<li class="shrink-0 m-1"><button class="tab px-5 py-2.5 rounded-2xl text-orange-700 hover:bg-orange-100" data-tab="courses">이수체계도</button></li>
+				<li class="shrink-0 m-1"><button class="tab px-5 py-2.5 rounded-2xl text-orange-700 hover:bg-orange-100" data-tab="timetable">현재 수강 강의</button></li>
+				<li class="shrink-0 m-1"><button class="tab px-5 py-2.5 rounded-2xl text-orange-700 hover:bg-orange-100" data-tab="progress">수강 완료 강의</button></li>
+				<li class="shrink-0 m-1"><button class="tab px-5 py-2.5 rounded-2xl text-orange-700 hover:bg-orange-100" data-tab="grade">나의 학점</button></li>
+				<li class="shrink-0 m-1"><button id="tabCalendar" class="tab px-5 py-2.5 rounded-2xl text-orange-700 hover:bg-orange-100" data-tab="calendar">학사일정</button></li>
+			</ul>
+		</div>
+	</nav>
+
+	<!-- 본문 -->
+	<div class="mx-auto max-w-7xl px-4 py-6 grid grid-cols-1 lg:grid-cols-12 gap-4">
+		<aside class="lg:col-span-5 xl:col-span-4 h-fit lg:sticky lg:top-4">
+			<div class="clipboard-wrap">
+				<div class="clipboard-board">
+					<div class="clip"></div>
+					<div class="paper">
+						<div class="paper-header">
+							<h2 class="title">졸업 체크리스트</h2>
+							<!-- 진행률 왼쪽 경고 아이콘 (필요시 표시) -->
+							<div class="flex items-center gap-2">
+								<button id="progressWarn" class="hidden text-amber-600 text-lg leading-none" title="" aria-label="미이수 필수 과목 경고">⚠️</button>
+								<span class="progress-text" id="progressLabel">0/10 완료</span>
+							</div>
+						</div>
+
+						<div class="progress-track"><div class="progress-bar" id="progressBar"></div></div>
+
+						<ul class="todo-list" id="todoList">
+							<li id="majorTodoItem" class="todo-item cursor-pointer">
+								<input type="checkbox" class="todo" data-key="major" />
+								<span>전공 72학점</span>
+								<span class="ml-auto text-xs text-gray-500" id="majorProgress"></span>
+								<!-- 경고 아이콘: 없으면 완전 숨김(display:none) -->
+								<span class="ml-2 text-xs text-amber-600 hidden" id="majorWarn"></span>
+							</li>
+							<li class="todo-item"><input type="checkbox" class="todo" data-key="common" /><span>공통교양 25학점</span><span class="ml-auto text-xs text-gray-500" id="commonProgress"></span></li>
+							<li class="todo-item"><input type="checkbox" class="todo" data-key="basic" /><span>기본소양 6학점</span><span class="ml-auto text-xs text-gray-500" id="basicProgress"></span></li>
+							<li class="todo-item"><input type="checkbox" class="todo" data-key="bsm" /><span>BSM 21학점</span><span class="ml-auto text-xs text-gray-500" id="bsmProgress"></span></li>
+							<li class="todo-item"><input type="checkbox" class="todo" data-key="total" /><span>취득학점 130학점</span><span class="ml-auto text-xs text-gray-500" id="totalProgress"></span></li>
+							<li class="todo-item"><input type="checkbox" class="todo" data-key="gpa" /><span>평점평균 2.0</span><span class="ml-auto text-xs text-gray-500" id="gpaProgress"></span></li>
+							<li class="todo-item"><input type="checkbox" class="todo" data-key="toeic" /><span>TOEIC 700</span><span class="ml-auto text-xs text-gray-500" id="toeicProgress"></span></li>
+							<li class="todo-item"><input type="checkbox" class="todo" data-key="eng_course" /><span>영어강의 4개</span><span class="ml-auto text-xs text-gray-500" id="eng_courseProgress"></span></li>
+							<li class="todo-item"><input type="checkbox" class="todo" data-key="design1" /><span>종합설계1 이수</span><span class="ml-auto text-xs text-gray-500" id="design1Progress"></span></li>
+							<li class="todo-item"><input type="checkbox" class="todo" data-key="design2" /><span>종합설계2/개별연구</span><span class="ml-auto text-xs text-gray-500" id="design2Progress"></span></li>
+						</ul>
+
+						<!-- 미이수 필수과목 패널 -->
+						<div id="missingPanel" class="hidden mt-3"></div>
+					</div>
+				</div>
+			</div>
+		</aside>
+
+		<main class="lg:col-span-7 xl:col-span-8">
+			<section class="bg-white rounded-2xl p-6 shadow-sm min-h-[280px] text-gray-700">
+				<div id="tabContent"></div>
+			</section>
+		</main>
+	</div>
+
+	<!-- 비번 확인 모달 -->
+	<div id="pwModal" class="fixed inset-0 hidden items-center justify-center bg-black/40 z-50">
+		<div id="pwModalOverlay" class="absolute inset-0"></div>
+		<div role="dialog" aria-modal="true" class="relative w-[min(92vw,420px)] rounded-2xl bg-white shadow-xl p-5">
+			<div class="flex items-start justify-between mb-3">
+				<h3 class="text-lg font-semibold text-gray-800">비밀번호 확인</h3>
+				<button id="pwModalClose" class="p-2 rounded-lg hover:bg-gray-100" aria-label="닫기">✕</button>
+			</div>
+			<form id="pwForm" class="space-y-3">
+				<div class="flex items-center gap-2">
+					<input id="pwInput" type="password" class="flex-1 border rounded-lg px-3 py-2" placeholder="비밀번호 입력" />
+					<button id="pwToggle" type="button" class="px-2 py-2 border rounded-lg">표시</button>
+				</div>
+				<p id="pwError" class="text-sm text-red-500 hidden">비밀번호를 입력하세요.</p>
+				<div class="flex justify-end gap-2">
+					<button id="pwCancel" type="button" class="px-3 py-2 rounded-xl border">취소</button>
+					<button type="submit" class="px-3 py-2 rounded-xl bg-orange-500 text-white">확인</button>
+				</div>
+			</form>
+			<span id="eyeOn" class="hidden"></span><span id="eyeOff"></span>
+		</div>
+	</div>
+
+	<!-- 학사일정 모달 (일자 상세) -->
+	<div id="calModal" class="fixed inset-0 hidden items-center justify-center bg-black/40 z-50">
+		<div id="calModalOverlay" class="absolute inset-0"></div>
+		<div role="dialog" aria-modal="true" aria-labelledby="calModalTitle" class="relative w-[min(92vw,560px)] rounded-2xl bg-white shadow-xl p-5">
+			<div class="flex items-start justify-between mb-4">
+				<h3 id="calModalTitle" class="text-lg font-semibold text-gray-800">일정</h3>
+				<button id="calModalClose" class="p-2 rounded-lg hover:bg-gray-100" aria-label="닫기">
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5">
+						<path fill-rule="evenodd" d="M10 8.586 4.293 2.879A1 1 0 1 0 2.879 4.293L8.586 10l-5.707 5.707a1 1 0 1 0 1.414 1.414L10 11.414l5.707 5.707a1 1 0 0 0 1.414-1.414L11.414 10l5.707-5.707A1 1 0 0 0 15.707 2.879L10 8.586z" clip-rule="evenodd"/>
+					</svg>
+				</button>
+			</div>
+			<div id="calModalBody" class="space-y-2"></div>
+			<div class="mt-4 flex justify-end">
+				<button id="calModalOk" class="px-4 py-2 rounded-xl bg-orange-500 text-white font-semibold hover:bg-orange-600">확인</button>
+			</div>
+		</div>
+	</div>
+
+	<!-- 외부 index.js -->
+	<script type="module" src="index.js"></script>
+
+	<!-- 학점보기 보조 카드 초기화 (기존 기능 유지) -->
+	<script>
+		(function setupGradeSummary(){
+			const tabBtn = document.querySelector('[data-tab="grade"]');
+			const tabContent = document.getElementById('tabContent');
+			if(!tabBtn || !tabContent) return;
+
+			function box(label, key){
+				return `
+				<div class="rounded-xl bg-white shadow-sm border border-white/60 p-4 flex items-center justify-between">
+					<div>
+						<p class="text-xs text-gray-500">${label}</p>
+						<p id="gpa_${key}" class="text-xl sm:text-2xl font-bold text-gray-900">—</p>
+					</div>
+					<div class="text-[11px] sm:text-xs text-gray-500" id="gpa_${key}_meta"></div>
+				</div>`;
+			}
+
+			function injectContainer(){
+				if(document.getElementById('gpaSummaryCard')) return;
+				const card = document.createElement('div');
+				card.id = 'gpaSummaryCard';
+				card.className = 'mt-6';
+				card.innerHTML = `
+					<div class="rounded-2xl border border-orange-100 bg-gradient-to-br from-orange-50 to-amber-50 p-5">
+						<div class="flex items-center justify-between mb-3">
+							<h4 class="text-base sm:text-lg font-semibold text-gray-800">학점보기</h4>
+							<span class="text-xs text-gray-500">자동 계산</span>
+						</div>
+						<div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+							${box('직전 학기', 'lastSem')}
+							${box('전공 과목', 'majorOnly')}
+							${box('총 누적', 'overall')}
+						</div>
+					</div>`;
+				tabContent.appendChild(card);
+			}
+
+			function fmt(val){ return (typeof val==='number') ? val.toFixed(2)+' / 4.5' : '—'; }
+
+			window.updateGradeSummary = (payload)=> {
+				injectContainer();
+				const $ = id => document.getElementById(id);
+				const last = payload?.last_sem_gpa ?? null;
+				const major= payload?.major_gpa ?? null;
+				const overall = payload?.overall_gpa ?? null;
+
+				$('gpa_lastSem').textContent   = fmt(last);
+				$('gpa_majorOnly').textContent = fmt(major);
+				$('gpa_overall').textContent   = fmt(overall);
+
+				$('gpa_lastSem_meta').textContent   = last!=null ? '직전 학기' : '데이터 필요';
+				$('gpa_majorOnly_meta').textContent = major!=null ? '전공 가중 평균' : '데이터 필요';
+				$('gpa_overall_meta').textContent   = overall!=null ? '학기 산술평균' : '데이터 필요';
+			};
+
+			tabBtn.addEventListener('click', ()=> setTimeout(injectContainer, 0));
+		})();
+	</script>
+
+	<!-- ▼▼▼ 여기부터: 학사일정(휠 피커 & 주차 막대 & 모달) — HTML만 수정하여 통합 ▼▼▼ -->
+	<script>
+		/* ===== 정적 학사일정 데이터 ===== */
+		const ACADEMIC_EVENTS = [
+			{ title: "개강/학기개시일", start: "2025-09-01", end: "2025-09-01" },
+			{ title: "학부 수강신청 확인 및 정정", start: "2025-09-02", end: "2025-09-07" },
+			{ title: "2025학년도 2학기 휴학 신청(2차)", start: "2025-09-03", end: "2025-09-05" },
+			{ title: "취득교과목 학점포기 신청", start: "2025-09-10", end: "2025-09-12" },
+			{ title: "수강신청교과목 취소", start: "2025-09-17", end: "2025-09-19" },
+			{ title: "2025학년도 2학기 휴학 신청(3차)", start: "2025-09-18", end: "2025-09-22" },
+			{ title: "다전공(복수∙연계∙융합∙학생설계전공) 포기 신청", start: "2025-09-22", end: "2025-09-24" },
+			{ title: "조기졸업 신청", start: "2025-09-22", end: "2025-09-24" },
+			{ title: "학기 1/4 기준일", start: "2025-09-26", end: "2025-09-26" },
+			{ title: "2025학년도 2학기 중간시험", start: "2025-10-20", end: "2025-10-24" },
+			{ title: "학기 1/2 기준일", start: "2025-10-22", end: "2025-10-22" },
+			{ title: "겨울 계절학기 수강신청", start: "2025-11-12", end: "2025-11-14" },
+			{ title: "학기 3/4 기준일", start: "2025-11-17", end: "2025-11-17" },
+			{ title: "전과(전공변경) 신청", start: "2025-11-26", end: "2025-11-28" },
+			{ title: "졸업연기 신청", start: "2025-11-26", end: "2025-11-28" },
+			{ title: "2026학년도 1학기 교내장학신청(복지,새터민,국가유공자,종단추천)", start: "2025-12-01", end: "2025-12-19" },
+			{ title: "2025학년도 2학기 성적처리(입력)", start: "2025-12-01", end: "2025-12-22" },
+			{ title: "취득교과목 학점포기 신청", start: "2025-12-03", end: "2025-12-05" },
+			{ title: "다전공(복수∙연계∙융합∙학생설계전공) 신청", start: "2025-12-03", end: "2025-12-19" },
+			{ title: "나노∙마이크로디그리 신청", start: "2025-12-03", end: "2025-12-19" },
+			{ title: "2025학년도 2학기 기말시험", start: "2025-12-05", end: "2025-12-11" },
+			{ title: "종강", start: "2025-12-12", end: "2025-12-12" },
+			{ title: "2025학년도 2학기 보강 시행기간", start: "2025-12-15", end: "2025-12-19" },
+			{ title: "겨울 방학", start: "2025-12-20", end: "2026-02-28" },
+			{ title: "2026학년도 1학기 학·석사연계과정 신청", start: "2025-12-22", end: "2025-12-26" },
+			{ title: "겨울 계절학기", start: "2025-12-22", end: "2026-01-13" },
+			{ title: "2025학년도 2학기 성적처리(공시,정정)", start: "2025-12-23", end: "2025-12-26" },
+			{ title: "2026학년도 1학기 복학 신청(1차)", start: "2026-01-02", end: "2026-01-05" },
+			{ title: "2026년 봄 졸업대상자 영어성적 제출 마감", start: "2026-01-09", end: "2026-01-09" },
+			{ title: "2026학년도 1학기 복학 신청(2차)", start: "2026-01-12", end: "2026-01-16" },
+			{ title: "2026학년도 1학기 휴학 신청(1차)", start: "2026-01-12", end: "2026-01-16" },
+			{ title: "2026학년도 1학기 학부 수강 신청", start: "2026-02-02", end: "2026-02-06" },
+			{ title: "2026년 봄 학위수여식(서울캠퍼스)", start: "2026-02-12", end: "2026-02-12" },
+			{ title: "2026학년도 입학식(서울캠퍼스)", start: "2026-02-13", end: "2026-02-13" },
+			{ title: "2026학년도 1학기 등록", start: "2026-02-19", end: "2026-02-24" }
+		];
+
+		const TODAY = new Date(); TODAY.setHours(0,0,0,0);
+		const DAY_MS = 86400000;
+		const ITEM_H = 32;      // picker item height (CSS와 동일)
+		const VISIBLE_ROWS = 5; // 보이는 항목 수(홀수 권장)
+		const CENTER_IDX = Math.floor(VISIBLE_ROWS/2);
+
+		function toDate(iso){ return new Date(iso + "T00:00:00"); }
+		function ymd(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; }
+		function startOfMonth(d){ return new Date(d.getFullYear(), d.getMonth(), 1); }
+		function endOfMonth(d){ return new Date(d.getFullYear(), d.getMonth()+1, 0); }
+		function addDays(d,n){ const x=new Date(d); x.setDate(x.getDate()+n); return x; }
+		function sameDay(a,b){ return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate(); }
+		function fmtKoreanDate(iso){ const d=toDate(iso); return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,"0")}.${String(d.getDate()).padStart(2,"0")}.`; }
+
+		function getEventColorClass(ev){
+			const t = ev.title;
+			if(/개강|종강|시험|보강|계절학기/.test(t)) return "bg-orange-100 text-orange-800 border-orange-200";
+			if(/수강신청|정정|취소/.test(t)) return "bg-blue-100 text-blue-800 border-blue-200";
+			if(/휴학|복학|졸업|연기/.test(t)) return "bg-green-100 text-green-800 border-green-200";
+			if(/장학|포기|신청/.test(t)) return "bg-purple-100 text-purple-800 border-purple-200";
+			if(/입학식|학위수여식/.test(t)) return "bg-red-100 text-red-800 border-red-200";
+			if(/성적처리/.test(t)) return "bg-gray-100 text-gray-800 border-gray-300";
+			return "bg-yellow-100 text-yellow-800 border-yellow-200";
+		}
+
+		function monthGridRange(base){
+			const first = startOfMonth(base);
+			const startOffset = first.getDay();
+			const gridStart = addDays(first, -startOffset);
+			const days = [];
+			for(let i=0;i<42;i++) days.push(addDays(gridStart, i));
+			return { days, first, last:endOfMonth(base) };
+		}
+
+		function splitEventsByWeek(viewDate, events){
+			const { days } = monthGridRange(viewDate);
+			const weeks = [];
+			for(let w=0; w<6; w++){
+				const weekDays = days.slice(w*7, w*7+7);
+				weeks.push({ start: weekDays[0], end: weekDays[6], days: weekDays, lanes: [], more: 0 });
+			}
+			weeks.forEach(week=>{
+				const evs = events
+					.map((ev, i)=> ({...ev, _id:i}))
+					.filter(ev => toDate(ev.end) >= week.start && toDate(ev.start) <= week.end)
+					.map(ev => {
+						const s = Math.max(0, Math.floor((toDate(ev.start) - week.start)/DAY_MS));
+						const e = Math.min(6, Math.floor((toDate(ev.end) - week.start)/DAY_MS));
+						return { ...ev, startCol: s+1, endCol: e+2 };
+					})
+					.sort((a,b)=>(a.startCol-b.startCol) || (toDate(a.start)-toDate(b.start)));
+
+				const lanes = [];
+				evs.forEach(ev=>{
+					let placed=false;
+					for(const lane of lanes){
+						const collide = lane.some(x => !(ev.endCol <= x.startCol || ev.startCol >= x.endCol));
+						if(!collide){ lane.push(ev); placed=true; break; }
+					}
+					if(!placed) lanes.push([ev]);
+				});
+
+				week.more = Math.max(0, lanes.length-3);
+				week.lanes = lanes.slice(0,3);
+			});
+			return weeks;
+		}
+
+		function detectYearRange(events){
+			const ys = events.flatMap(ev=>[toDate(ev.start).getFullYear(), toDate(ev.end).getFullYear()]);
+			const todayY = new Date().getFullYear();
+			let min = Math.min(...ys, todayY);
+			let max = Math.max(...ys, todayY);
+			min -= 1; max += 1;
+			return {min, max};
+		}
+
+		/* ===== iOS Wheel Picker 유틸 ===== */
+		function buildWheel(container, items, initialIndex){
+			container.innerHTML = '';
+			const scroller = document.createElement('div');
+			scroller.className = 'scroller';
+			const padCount = CENTER_IDX;
+			for(let i=0;i<padCount;i++){ const s=document.createElement('div'); s.className='picker-item'; s.textContent=' '; scroller.appendChild(s); }
+			items.forEach(txt=>{ const el=document.createElement('div'); el.className='picker-item'; el.textContent=txt; scroller.appendChild(el); });
+			for(let i=0;i<padCount;i++){ const s=document.createElement('div'); s.className='picker-item'; s.textContent=' '; scroller.appendChild(s); }
+			container.appendChild(scroller);
+			const line=document.createElement('div'); line.className='selection-line';
+			const mask=document.createElement('div'); mask.className='mask';
+			container.appendChild(line); container.appendChild(mask);
+
+			const target = (initialIndex) * ITEM_H;
+			scroller.scrollTop = target;
+
+			let snapTimer = null;
+			function snap(){
+				let idx = Math.round(scroller.scrollTop / ITEM_H);
+				idx = Math.max(0, Math.min(items.length-1, idx));
+				const top = idx * ITEM_H;
+				scroller.scrollTo({ top, behavior:'smooth' });
+			}
+			function onScroll(){ clearTimeout(snapTimer); snapTimer = setTimeout(snap, 80); }
+			scroller.addEventListener('scroll', onScroll, { passive:true });
+
+			container.tabIndex = 0;
+			container.addEventListener('keydown', (e)=>{
+				if(['ArrowUp','ArrowDown','PageUp','PageDown','Home','End'].includes(e.key)){
+					e.preventDefault();
+					let delta=0;
+					if(e.key==='ArrowUp') delta=-1;
+					if(e.key==='ArrowDown') delta=+1;
+					if(e.key==='PageUp') delta=-5;
+					if(e.key==='PageDown') delta=+5;
+					if(e.key==='Home'){ scroller.scrollTo({ top:0, behavior:'smooth' }); return; }
+					if(e.key==='End'){ scroller.scrollTo({ top:(items.length-1)*ITEM_H, behavior:'smooth' }); return; }
+					const nextTop = scroller.scrollTop + delta*ITEM_H;
+					scroller.scrollTo({ top: nextTop, behavior:'smooth' });
+				}
+			});
+
+			return {
+				getIndex(){ let idx=Math.round(scroller.scrollTop/ITEM_H); return Math.max(0, Math.min(items.length-1, idx)); },
+				setIndex(i){ const top=Math.max(0, Math.min(items.length-1, i))*ITEM_H; scroller.scrollTo({ top, behavior:'instant' }); },
+				focus(){ container.focus(); }
+			};
+		}
+
+		function openDayModal(date, evs){
+			const modal = document.getElementById('calModal');
+			const body  = document.getElementById('calModalBody');
+			const title = document.getElementById('calModalTitle');
+			title.textContent = `${date.getFullYear()}년 ${date.getMonth()+1}월 ${date.getDate()}일 일정`;
+
+			if(!evs || evs.length===0){
+				body.innerHTML = '<p class="text-sm text-gray-500">등록된 일정이 없습니다.</p>';
+			}else{
+				let lis = '';
+				evs.forEach(ev=>{
+					const when = (ev.start===ev.end) ? fmtKoreanDate(ev.start) : (fmtKoreanDate(ev.start) + ' ~ ' + fmtKoreanDate(ev.end));
+					lis += '<li class="p-4"><p class="font-medium text-gray-800 break-keep">' + ev.title + '</p><p class="text-xs text-gray-500 mt-1">' + when + '</p></li>';
+				});
+				body.innerHTML = '<ul class="divide-y divide-gray-100 rounded-2xl border border-gray-100 overflow-hidden">' + lis + '</ul>';
+			}
+			modal.classList.remove('hidden'); modal.classList.add('flex');
+			const close = ()=>{ modal.classList.add('hidden'); modal.classList.remove('flex'); };
+			document.getElementById('calModalOverlay').onclick = close;
+			document.getElementById('calModalClose').onclick = close;
+			document.getElementById('calModalOk').onclick = close;
+		}
+
+		function renderCalendar(container, viewDate, allEvents){
+			const ymLabel = `${viewDate.getFullYear()}년 ${viewDate.getMonth()+1}월`;
+			const weeks = splitEventsByWeek(viewDate, allEvents);
+			const {min:MIN_YEAR, max:MAX_YEAR} = detectYearRange(allEvents);
+
+			const headerHTML = `
+				<div class="flex items-center justify-between">
+					<h3 class="text-lg font-semibold text-gray-800">학사일정</h3>
+					<div class="flex items-center gap-2">
+						<button id="btnToday" class="px-3 py-1.5 rounded-xl border text-sm hover:bg-gray-50">오늘로</button>
+						<div class="relative rounded-xl border flex items-stretch">
+							<button id="btnPrev" class="px-3 py-1.5 text-sm hover:bg-gray-50">이전</button>
+							<button id="ymLabelBtn" class="px-3 py-1.5 text-sm bg-gray-50 hover:bg-gray-100 whitespace-nowrap" aria-haspopup="dialog" aria-expanded="false">${ymLabel}</button>
+							<button id="btnNext" class="px-3 py-1.5 text-sm hover:bg-gray-50">다음</button>
+
+							<!-- iOS Wheel 패널 -->
+							<div id="wheelPanel" class="absolute left-1/2 -translate-x-1/2 top-[calc(100%+4px)] bg-white border rounded-2xl shadow-xl p-3 hidden z-30 w-[min(92vw,380px)]">
+								<div class="grid grid-cols-2 gap-3">
+									<div>
+										<div class="text-xs text-gray-500 mb-1">연도</div>
+										<div class="picker" id="yearPicker"></div>
+									</div>
+									<div>
+										<div class="text-xs text-gray-500 mb-1">월</div>
+										<div class="picker" id="monthPicker"></div>
+									</div>
+								</div>
+								<div class="flex justify-end gap-2 pt-3">
+									<button id="wheelCancel" class="px-3 py-1.5 rounded-xl border hover:bg-gray-50">취소</button>
+									<button id="wheelApply" class="px-3 py-1.5 rounded-xl bg-orange-500 text-white hover:bg-orange-600">이동</button>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>`;
+
+			const dowHTML = `
+				<div class="grid grid-cols-7 text-center text-xs text-gray-500">
+					<div class="py-1">일</div><div class="py-1">월</div><div class="py-1">화</div>
+					<div class="py-1">수</div><div class="py-1">목</div><div class="py-1">금</div><div class="py-1">토</div>
+				</div>`;
+
+			const TOP_OFFSET = 28, LANE_H = 18, LANE_GAP = 2;
+			let weeksHTML = '';
+			weeks.forEach(week=>{
+				let dayCells = '';
+				week.days.forEach(d=>{
+					const inMonth = d.getMonth()===viewDate.getMonth();
+					const isToday = sameDay(d, TODAY);
+					dayCells += '' +
+					'<div class="relative rounded-xl border ' + (inMonth?'bg-white':'bg-gray-50') + ' ' + (isToday?'border-orange-500':'border-gray-200') + ' min-h-[92px]">' +
+						'<button class="absolute top-1 left-1 z-20 text-[11px] font-semibold ' + (inMonth?'text-gray-800':'text-gray-400') + ' bg-white/85 px-1 rounded day-label" data-date="' + ymd(d) + '" title="' + ymd(d) + '">' + d.getDate() + '</button>' +
+					'</div>';
+				});
+
+				let lanesHTML = '';
+				week.lanes.forEach((lane, idx)=>{
+					const top = TOP_OFFSET + idx*(LANE_H+LANE_GAP);
+					let bars = '';
+					lane.forEach(ev=>{
+						const colorClass = getEventColorClass(ev);
+						bars += '<button class="col-start-' + ev.startCol + ' col-end-' + ev.endCol + ' h-full text-left text-[11px] px-2 rounded-lg border ' + colorClass + ' hover:brightness-95 overflow-hidden whitespace-nowrap" data-ev-id="' + ev._id + '" title="' + ev.title + '">' + ev.title + '</button>';
+					});
+					lanesHTML += '' +
+					'<div class="absolute inset-x-0 z-10" style="top:' + top + 'px; height:' + LANE_H + 'px;">' +
+						'<div class="grid grid-cols-7 gap-1 h-full">' + bars + '</div>' +
+					'</div>';
+				});
+
+				const more = week.more>0 ? '<div class="absolute right-1 bottom-1 z-10 text-[11px] text-gray-600 bg-white/80 px-1.5 rounded">+' + week.more + '개 더 있음</div>' : '';
+
+				weeksHTML += '' +
+				'<div class="relative rounded-xl border border-gray-200 p-1">' +
+					'<div class="grid grid-cols-7 gap-1">' + dayCells + '</div>' +
+					lanesHTML +
+					more +
+				'</div>';
+			});
+
+			const legendHTML = `
+				<div class="text-xs text-gray-500 flex items-center gap-3 flex-wrap">
+					<span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-orange-400"></span> 수업·시험</span>
+					<span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-blue-400"></span> 수강신청</span>
+					<span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-400"></span> 휴학·복학·졸업</span>
+					<span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-purple-400"></span> 장학/신청</span>
+					<span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-red-400"></span> 행사</span>
+					<span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-gray-400"></span> 성적처리</span>
+					<span class="inline-flex items-center gap-1"><span class="w-3 h-3 border border-orange-500 rounded"></span> 오늘</span>
+				</div>`;
+
+			container.innerHTML =
+				'<div class="space-y-4">' + headerHTML + dowHTML + '<div class="space-y-2">' + weeksHTML + '</div>' + legendHTML + '</div>';
+
+			/* 헤더 인터랙션 */
+			const btnPrev = container.querySelector('#btnPrev');
+			const btnNext = container.querySelector('#btnNext');
+			const btnToday = container.querySelector('#btnToday');
+			const ymLabelBtn = container.querySelector('#ymLabelBtn');
+			const wheelPanel = container.querySelector('#wheelPanel');
+			const yearPickerEl = container.querySelector('#yearPicker');
+			const monthPickerEl = container.querySelector('#monthPicker');
+
+			btnPrev.addEventListener('click', ()=>{
+				renderCalendar(container, new Date(viewDate.getFullYear(), viewDate.getMonth()-1, 1), allEvents);
+			});
+			btnNext.addEventListener('click', ()=>{
+				renderCalendar(container, new Date(viewDate.getFullYear(), viewDate.getMonth()+1, 1), allEvents);
+			});
+			btnToday.addEventListener('click', ()=>{
+				const t=new Date(); t.setHours(0,0,0,0);
+				renderCalendar(container, new Date(t.getFullYear(), t.getMonth(), 1), allEvents);
+			});
+
+			let yearWheel, monthWheel;
+
+			function openWheel(){
+				const {min:MIN_YEAR, max:MAX_YEAR} = detectYearRange(allEvents);
+				const years = []; for(let y=MIN_YEAR; y<=MAX_YEAR; y++) years.push(`${y}년`);
+				const months = Array.from({length:12}, (_,i)=>`${i+1}월`);
+				yearWheel = buildWheel(yearPickerEl, years, (viewDate.getFullYear()-MIN_YEAR));
+				monthWheel = buildWheel(monthPickerEl, months, viewDate.getMonth());
+				wheelPanel.classList.remove('hidden');
+				ymLabelBtn.setAttribute('aria-expanded','true');
+				yearWheel.focus();
+				requestAnimationFrame(()=>{
+					function onDocClick(ev){
+						if(!wheelPanel.contains(ev.target) && !ymLabelBtn.contains(ev.target)) closeWheel();
+					}
+					document.addEventListener('click', onDocClick, { once:true });
+				});
+			}
+			function closeWheel(){
+				wheelPanel.classList.add('hidden');
+				ymLabelBtn.setAttribute('aria-expanded','false');
+			}
+			ymLabelBtn.addEventListener('click', (e)=>{
+				e.stopPropagation();
+				if(wheelPanel.classList.contains('hidden')) openWheel();
+				else closeWheel();
+			});
+			container.querySelector('#wheelApply').addEventListener('click', ()=>{
+				const {min:MIN_YEAR} = detectYearRange(allEvents);
+				const y = MIN_YEAR + yearWheel.getIndex();
+				const m = monthWheel.getIndex(); // 0-11
+				closeWheel();
+				renderCalendar(container, new Date(y, m, 1), allEvents);
+			});
+			container.querySelector('#wheelCancel').addEventListener('click', closeWheel);
+			wheelPanel.addEventListener('keydown', (e)=>{
+				if(e.key==='Enter'){ e.preventDefault(); container.querySelector('#wheelApply').click(); }
+				else if(e.key==='Escape'){ e.preventDefault(); closeWheel(); }
+			});
+
+			/* 날짜/이벤트 클릭 → 모달 */
+			container.querySelectorAll('.day-label').forEach(btn=>{
+				btn.addEventListener('click', (e)=>{
+					const d = toDate(btn.dataset.date);
+					const evs = allEvents.filter(ev => toDate(ev.start) <= d && toDate(ev.end) >= d);
+					openDayModal(d, evs);
+					e.stopPropagation();
+				});
+			});
+			container.querySelectorAll('[data-ev-id]').forEach(btn=>{
+				btn.addEventListener('click', (e)=>{
+					const id = Number(btn.dataset.evId);
+					const ev = allEvents.map((x,i)=>({...x,_id:i})).find(x=>x._id===id);
+					if(ev) openDayModal(toDate(ev.start), [ev]);
+					e.stopPropagation();
+				});
+			});
+		}
+
+		/* ===== index.js의 기본 탭 핸들러를 '캡처 단계'에서 가로채기 ===== */
+		(function initCalendarHijack(){
+			const calBtn = document.querySelector('[data-tab="calendar"]');
+			const tabContent = document.getElementById('tabContent');
+			if(!calBtn || !tabContent) return;
+
+			function selectTab(btn){
+				document.querySelectorAll('.tab').forEach(b=> b.classList.remove('bg-orange-500','text-white'));
+				btn.classList.add('bg-orange-500','text-white');
+			}
+
+			function renderInitial(){
+				const t = new Date(); t.setHours(0,0,0,0);
+				renderCalendar(tabContent, new Date(t.getFullYear(), t.getMonth(), 1), ACADEMIC_EVENTS);
+			}
+
+			/* 캡처 단계에서 stopImmediatePropagation으로 index.js의 renderTab 호출을 차단 */
+			calBtn.addEventListener('click', (e)=>{
+				e.preventDefault();
+				e.stopImmediatePropagation();
+				selectTab(calBtn);
+				renderInitial();
+			}, true);
+
+			/* URL에 #calendar 있으면 바로 렌더 (선택 사항) */
+			if (location.hash === '#calendar') {
+				selectTab(calBtn);
+				renderInitial();
+			}
+		})();
+	</script>
+	<!-- ▲▲▲ 학사일정 통합 끝 ▲▲▲ -->
+
+	<!-- ▼▼▼ 체크리스트 자동 제어(사용자 수동 체크 방지 + 조건 충족 시만 체크) ▼▼▼ -->
+	<script>
+	(function enforceChecklistAuto(){
+		const $ = (id) => document.getElementById(id);
+		const q = (sel) => document.querySelector(sel);
+		const qa = (sel) => Array.from(document.querySelectorAll(sel));
+
+		// 1) 수동 조작 차단(스타일은 유지)
+		function lockUserInteraction(){
+			qa('input.todo').forEach(chk=>{
+				chk.style.pointerEvents = 'none'; // 클릭 차단
+				chk.tabIndex = -1;               // 키보드 포커스 차단
+				// 혹시 이벤트로 토글하려는 시도도 차단
+				['click','change','input','keydown','keyup','mousedown','touchstart'].forEach(ev=>{
+					chk.addEventListener(ev, e=>{ e.preventDefault(); e.stopImmediatePropagation(); return false; }, true);
+				});
+			});
+		}
+
+		// 2) 체크/라벨 도우미
+		function setChecked(key, done){
+			const el = q('input.todo[data-key="'+key+'"]');
+			if (el){ el.checked = !!done; el.setAttribute('aria-checked', el.checked ? 'true':'false'); }
+		}
+		function setProgressText(id, got, need, suffix=''){
+			const span = $(id);
+			if(!span) return;
+			if(Number.isFinite(got) && Number.isFinite(need)) span.textContent = `${got}/${need}${suffix}`;
+			else span.textContent = '';
+		}
+		function pct(n, d){ return d>0 ? Math.round((n/d)*100) : 0; }
+
+		// 3) 미이수 패널 렌더
+		function renderMissing(list){
+			const panel = $('missingPanel');
+			const warnBtn = $('progressWarn');
+			const majorWarn = $('majorWarn');
+			if(Array.isArray(list) && list.length){
+				warnBtn.classList.remove('hidden');
+				warnBtn.title = '미이수 필수 과목이 있습니다';
+				if(majorWarn){ majorWarn.classList.remove('hidden'); majorWarn.textContent='필수 과목 미이수'; }
+				panel.classList.remove('hidden');
+				panel.innerHTML = `
+					<div class="rounded-xl border border-amber-200 bg-amber-50/60 p-3">
+						<p class="text-sm font-semibold text-amber-800 mb-2">미이수 필수 과목</p>
+						<div class="flex flex-wrap gap-2">
+							${list.map(x=>`<span class="px-2 py-1 rounded-lg text-xs bg-white border border-amber-200 text-amber-800 break-keep">${x}</span>`).join('')}
+						</div>
+					</div>`;
+			}else{
+				warnBtn.classList.add('hidden');
+				if(majorWarn){ majorWarn.classList.add('hidden'); majorWarn.textContent=''; }
+				panel.classList.add('hidden');
+				panel.innerHTML = '';
+			}
+		}
+
+		// 4) 메인 적용 함수 (전역 노출)
+		function applyChecklist(data){
+			// 다양한 키 이름 대응
+			const get = (...keys)=> {
+				for(const k of keys){
+					if(data && data[k] != null) return data[k];
+				}
+				return undefined;
+			};
+			// 숫자 변환
+			const num = (v, def=0)=> (v==null||v==='') ? def : Number(v);
+
+			// 크레딧/점수
+			const major  = num(get('major','major_credits'));
+			const common = num(get('common','common_credits'));
+			const basic  = num(get('basic','basic_credits'));
+			const bsm    = num(get('bsm','bsm_credits'));
+			const total  = num(get('total','total_credits'));
+			const gpa    = Number(get('gpa','overall_gpa','gpa_overall'));
+			const toeic  = num(get('toeic','toeic_score'));
+			const engCnt = num(get('eng_course','english_courses'));
+
+			const design1 = !!get('design1','design1_completed');
+			const design2 = !!get('design2','design2_completed','independent_research_completed');
+
+			// 조건 판정
+			const doneMajor  = major  >= 72;
+			const doneCommon = common >= 25;
+			const doneBasic  = basic  >=  6;
+			const doneBsm    = bsm    >= 21;
+			const doneTotal  = total  >= 130;
+			const doneGpa    = Number.isFinite(gpa) && gpa >= 2.0;
+			const doneToeic  = toeic  >= 700;
+			const doneEng    = engCnt >= 4;
+			const doneD1     = design1;
+			const doneD2     = design2;
+
+			// UI 반영: 진행 텍스트
+			setProgressText('majorProgress',  major, 72);
+			setProgressText('commonProgress', common, 25);
+			setProgressText('basicProgress',  basic, 6);
+			setProgressText('bsmProgress',    bsm, 21);
+			setProgressText('totalProgress',  total, 130);
+			const gpaSpan = $('gpaProgress'); gpaSpan.textContent = Number.isFinite(gpa) ? `${gpa.toFixed(2)}/2.00` : '';
+			const toeicSpan = $('toeicProgress'); toeicSpan.textContent = Number.isFinite(toeic) ? `${toeic}/700` : '';
+			const engSpan = $('eng_courseProgress'); engSpan.textContent = Number.isFinite(engCnt) ? `${engCnt}/4` : '';
+			$('design1Progress').textContent = doneD1 ? '완료' : '';
+			$('design2Progress').textContent = doneD2 ? '완료' : '';
+
+			// 체크박스(조건으로만 제어)
+			setChecked('major',     doneMajor);
+			setChecked('common',    doneCommon);
+			setChecked('basic',     doneBasic);
+			setChecked('bsm',       doneBsm);
+			setChecked('total',     doneTotal);
+			setChecked('gpa',       doneGpa);
+			setChecked('toeic',     doneToeic);
+			setChecked('eng_course',doneEng);
+			setChecked('design1',   doneD1);
+			setChecked('design2',   doneD2);
+
+			// 진행률
+			const completed = [
+				doneMajor, doneCommon, doneBasic, doneBsm, doneTotal,
+				doneGpa, doneToeic, doneEng, doneD1, doneD2
+			].filter(Boolean).length;
+			const label = $('progressLabel');
+			const bar   = $('progressBar');
+			if(label) label.textContent = `${completed}/10 완료`;
+			if(bar)   bar.style.width = `${Math.round(completed*10)}%`;
+
+			// 미이수 필수과목
+			let missing = [];
+			if(Array.isArray(data?.missing_required_courses)) missing = data.missing_required_courses;
+			['missing_major_required','missing_common_required','missing_bsm_required','missing_basic_required']
+				.forEach(k=>{ if(Array.isArray(data?.[k])) missing = missing.concat(data[k]); });
+			renderMissing(missing);
+		}
+
+		// 전역에서 호출할 수 있게 노출 (index.js 등에서 활용 가능)
+		window.applyChecklist = applyChecklist;
+
+		// 초기: 수동조작 잠금 + checklist.json 자동 로드(있을 때만)
+		lockUserInteraction();
+
+		try {
+			fetch('checklist.json', {cache:'no-store'})
+				.then(r => r.ok ? r.json() : null)
+				.then(j => {
+					if(!j) return;
+					const payload = j?.data ?? j;
+					applyChecklist(payload);
+				})
+				.catch(()=>{ /* 조용히 무시 */ });
+		} catch(e) { /* 조용히 무시 */ }
+	})();
+	</script>
+	<!-- ▲▲▲ 체크리스트 자동 제어 끝 ▲▲▲ -->
+</body>
+</html>

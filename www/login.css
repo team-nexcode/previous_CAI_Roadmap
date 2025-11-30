@@ -1,0 +1,223 @@
+@charset "UTF-8";
+
+/* ====== 기본 설정 ====== */
+:root {
+  --accent: #ff8a00;
+  --text-dark: #111;
+  --bg-light: rgba(255, 255, 255, 0.8);
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #000;
+}
+
+/* ====== 배경 슬라이드 ====== */
+.background-slideshow {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+}
+
+/* 수정: img 태그 대신 .slide 클래스 사용 */
+.background-slideshow .slide {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  opacity: 0;
+  transition: opacity 1.5s ease-in-out;
+}
+
+.background-slideshow .slide.active {
+  opacity: 1;
+}
+
+/* ====== 로그인 박스 ====== */
+.login-box {
+  background: var(--bg-light);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  padding: 50px 60px;
+  width: 420px;
+  max-width: 90%;
+  text-align: center;
+  animation: fadeIn 1s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.login-title {
+  font-size: 36px;
+  font-weight: 600;
+  margin-top: 0; /* 추가 */
+  margin-bottom: 30px;
+  color: var(--text-dark);
+}
+
+/* ====== 폼 & 입력창 ====== */
+#login-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.input-wrapper {
+  position: relative;
+  width: 100%;
+  margin-bottom: 20px; /* 수정: 아이디, 비밀번호 입력창 모두 동일한 하단 간격 적용 */
+}
+
+/* 수정: 모든 텍스트/비밀번호 입력창에 동일 스타일 적용 */
+.input-wrapper input[type="text"],
+.input-wrapper input[type="password"] {
+  width: 100%;
+  height: 52px;
+  font-size: 16px;
+  border-radius: 12px;
+  border: 2px solid #ccc;
+  padding: 0 45px 0 16px;
+  outline: none;
+  transition: border-color 0.3s;
+  box-sizing: border-box; /* 추가: 패딩이 크기에 영향을 주지 않도록 설정 */
+}
+
+.input-wrapper input:focus {
+  border-color: var(--accent);
+}
+
+.toggle-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  display: flex; /* 추가: 아이콘 중앙 정렬 */
+  align-items: center; /* 추가 */
+}
+
+.toggle-btn svg {
+  width: 20px;
+  height: 20px;
+  color: #666;
+}
+
+/* ====== 체크박스 ====== */
+.remember-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  margin-bottom: 24px;
+  font-size: 17px;
+  color: #333;
+  cursor: pointer; /* 추가 */
+}
+
+.remember-row input[type="checkbox"] {
+  width: 18px;  /* 이 숫자를 바꾸세요 */
+  height: 18px; /* 이 숫자를 바꾸세요 */
+  accent-color: var(--accent);
+}
+
+/* ====== 버튼 ====== */
+.btn-row {
+  display: flex;
+  gap: 20px;
+}
+
+.btn-row input[type="submit"],
+.btn-row button {
+  flex: 1;
+  height: 52px;
+  font-size: 17px;
+  font-weight: 600;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s ease;
+}
+
+.btn-row input[type="submit"] {
+  background-color: var(--accent);
+  color: white;
+}
+
+.btn-row input[type="submit"]:hover {
+  background-color: #e67a00;
+}
+
+.btn-row input[type="submit"]:active,
+.btn-row button:active {
+  transform: scale(0.98); /* 추가: 클릭 효과 */
+}
+
+.btn-row button {
+  background-color: #eaeaea;
+  color: #111;
+}
+
+.btn-row button:hover {
+  background-color: #dcdcdc;
+}
+
+/* ====== 로고 ====== */
+.logo-img {
+  width: 200px;
+  margin-top: 30px;
+  opacity: 0.8;
+}
+
+/* ====== 반응형 ====== */
+@media (max-width: 480px) {
+  .login-box {
+    padding: 40px 25px;
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+    justify-content: center;
+    display: flex;
+    flex-direction: column;
+  }
+  .login-title {
+    font-size: 28px;
+  }
+}
+
+.copyright {
+  font-size: 12px;         /* 글씨 크기 작게 */
+  color: #a0a0a0;         /* 연한 회색으로 */
+  margin-top: 32px;        /* 로고와의 간격 추가 */
+}
+/* ====== 모바일에서 로고 가운데 정렬 및 배경 투명도 조정 ====== */
+@media (max-width: 480px) {
+  .login-box {
+    align-items: center;                 /* 내부 요소를 가로 중앙 정렬 */
+    background: rgba(255, 255, 255, 0.3); /* ← 추가: 투명도 더 높게 (기존보다 더 비침) */
+    backdrop-filter: blur(1.5px);          /* 흐림 유지 */
+    -webkit-backdrop-filter: blur(1.5px);
+  }
+
+  .logo-img {
+    display: block;
+    margin: 20px auto 0 auto;            /* 로고 중앙 정렬 */
+  }
+}

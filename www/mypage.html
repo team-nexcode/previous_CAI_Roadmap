@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ko">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>나의 정보 - CAI Roadmap</title> 
+		<link rel="icon" type="image/png" href="/img/favicon.png">
+		<script src="https://cdn.tailwindcss.com"></script>
+		<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+		<style>
+			body { font-family: sans-serif; }
+		</style>
+	</head>
+	<body class="min-h-screen bg-orange-50 overflow-y-scroll">
+		<div class="h-1 w-full bg-orange-500"></div>
+
+		<header class="w-full bg-white/90 shadow-sm sticky top-0 z-10">
+			<div class="mx-auto max-w-7xl px-4 py-3 flex items-center justify-between">
+				<div class="flex items-center">
+					<img id="logoHome" src="/img/new CAI Roadmap logo.png" alt="CAI Roadmap Logo" class="max-h-10 max-w-41 h-auto w-auto min-h-7 min-w-28 cursor-pointer" />
+				</div>
+				<div class="text-sm sm:text-base text-gray-700 select-none flex-shrink items-center">
+					<div class="flex items-center gap-[clamp(8px,2vw,16px)] ml-5">
+						<span class="text-black-600 break-keep" id="idText"></span>
+						<span class="text-black-600 break-keep" id="nameText"></span>
+						<nav>
+							<a href="/mypage.html" id="myInfoTab" class="whitespace-nowrap text-base break-keep font-semibold text-orange-600 pb-1 border-b-2 border-orange-500">
+								나의 정보
+							</a>
+						</nav>
+						<span class="font-semibold text-orange-600 break-keep cursor-pointer" id="loginInfo"></span>
+					</div>
+				</div>
+			</div>
+		</header>
+
+		<div class="mx-auto max-w-7xl px-4 py-6">
+			<div class="bg-white rounded-2xl shadow-sm p-8">
+				<h2 class="text-2xl font-bold text-gray-800 border-b pb-4 mb-6">
+					나의 정보
+				</h2>
+				
+				<div class="space-y-10">
+					<div class="space-y-6"> 
+						<div>
+							<p class="text-sm font-semibold text-gray-500">이름</p>
+							<p id="info-name" class="text-lg text-gray-800 mt-1"></p>
+						</div>
+						<div>
+							<p class="text-sm font-semibold text-gray-500">학번</p>
+							<p id="info-id" class="text-lg text-gray-800 mt-1"></p>
+						</div>
+						<div>
+							<p class="text-sm font-semibold text-gray-500">학과</p>
+							<p id="info-department" class="text-lg text-gray-800 mt-1"></p>
+						</div>
+						<div>
+							<p class="text-sm font-semibold text-gray-500">이메일</p>
+							<p id="info-email" class="text-lg text-gray-800 mt-1"></p>
+						</div>
+						<div>
+							<p class="text-sm font-semibold text-gray-500">전화번호</p>
+							<p id="info-phone" class="text-lg text-gray-800 mt-1"></p>
+						</div>
+					</div>
+
+					<div>
+						<div class="flex items-center border-b pb-3 mb-4">
+							<h3 class="text-xl font-bold text-gray-800">
+								부가 정보
+							</h3>
+							<button id="edit-track-button" class="text-sm text-blue-600 hover:underline font-semibold ml-4">
+								수정
+							</button>
+						</div>
+						
+						<div>
+							<div id="track-view-mode">
+								<p class="text-sm font-semibold text-gray-500">선택한 트랙</p>
+								<p id="info-track" class="text-lg text-gray-800 mt-1"></p>
+							</div>
+
+							<div id="track-edit-mode" class="hidden">
+								<label for="track-select" class="text-sm font-semibold text-gray-500">트랙 선택</label>
+								<select id="track-select" name="track" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-300 focus:ring focus:ring-orange-200 focus:ring-opacity-50">
+									<option value="선택 안 함">선택 안 함</option>
+									<option value="비주얼컴퓨팅트랙">비주얼컴퓨팅트랙</option>
+									<option value="AI/DS트랙">AI/DS트랙</option>
+									<option value="컴퓨터보안트랙">컴퓨터보안트랙</option>
+									<option value="게임트랙">게임트랙</option>
+									<option value="AIoT트랙">AIoT트랙</option>
+									<option value="소프트웨어심화트랙">소프트웨어심화트랙</option>
+								</select>
+
+								<div class="flex justify-end gap-2 mt-4">
+									<button id="cancel-track-button" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg transition-colors">
+										취소
+									</button>
+									<button id="update-track-button" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+										수정 완료
+									</button>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div>
+						<h3 class="text-xl font-bold text-gray-800 border-b pb-3 mb-4">
+							서비스
+						</h3>
+
+						<!-- 모바일 친화 레이아웃 (PC는 기존처럼) -->
+						<div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+							<!-- 버튼 영역: 모바일 세로 / PC 가로 -->
+							<div class="flex flex-col sm:flex-row gap-2">
+								<button id="update-info-button"
+									class="w-full sm:w-auto shrink-0 bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200">
+									나의 정보 업데이트
+								</button>
+								<button id="withdraw-button"
+									class="w-full sm:w-auto shrink-0 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200">
+									서비스 탈퇴
+								</button>
+							</div>
+
+							<!-- 마지막 업데이트: 모바일에선 버튼 아래로 내려오고 간격 추가 -->
+							<p class="text-sm text-gray-500 mt-1 sm:mt-0 sm:self-end">
+								마지막 업데이트: <span id="info-updated-at"></span>
+							</p>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- 비밀번호 입력 모달 -->
+		<div id="pwModal" class="fixed inset-0 hidden items-center justify-center bg-black/40 z-50">
+			<div id="pwModalOverlay" class="absolute inset-0"></div>
+			<div role="dialog" aria-modal="true" aria-labelledby="pwModalTitle"
+				class="relative w-[min(92vw,420px)] rounded-2xl bg-white shadow-xl p-5">
+				<div class="flex items-start justify-between mb-4">
+					<h3 id="pwModalTitle" class="text-lg font-semibold text-gray-800">비밀번호 확인</h3>
+					<button id="pwModalClose" class="p-2 rounded-lg hover:bg-gray-100" aria-label="닫기">
+						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5">
+							<path fill-rule="evenodd" d="M10 8.586 4.293 2.879A1 1 0 1 0 2.879 4.293L8.586 10l-5.707 5.707a1 1 0 1 0 1.414 1.414L10 11.414l5.707 5.707a1 1 0 0 0 1.414-1.414L11.414 10l5.707-5.707A1 1 0 0 0 15.707 2.879L10 8.586z" clip-rule="evenodd"/>
+						</svg>
+					</button>
+				</div>
+
+				<form id="pwForm" class="space-y-4">
+					<label class="block">
+						<span class="text-sm text-gray-700">비밀번호</span>
+						<div class="mt-1 relative">
+							<input id="pwInput" type="password" autocomplete="current-password"
+								class="w-full rounded-xl border border-gray-300 px-4 py-2.5 pr-11 focus:outline-none focus:ring-2 focus:ring-orange-400"
+								placeholder="비밀번호를 입력하세요" required />
+							<button type="button" id="pwToggle"
+								class="absolute inset-y-0 right-2 my-auto h-8 w-8 grid place-items-center rounded-md hover:bg-gray-100"
+								aria-label="비밀번호 표시 전환">
+								<svg id="eyeOn" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+									fill="none" stroke="currentColor" class="h-5 w-5">
+									<path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/>
+									<circle cx="12" cy="12" r="3"/>
+								</svg>
+								<svg id="eyeOff" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+									fill="none" stroke="currentColor" class="h-5 w-5 hidden">
+									<path d="M3 3l18 18M10.58 10.58A3 3 0 0 0 12 15a3 3 0 0 0 2.42-1.26M9.88 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a18.29 18.29 0 0 1-3.06 4.17M6.07 6.07A18.69 18.69 0 0 0 1 12s4 8 11 8a10.86 10.86 0 0 0 5.37-1.43"/>
+								</svg>
+							</button>
+						</div>
+					</label>
+					<p id="pwError" class="text-sm text-red-600 hidden">비밀번호를 입력해주세요.</p>
+					<input type="hidden" id="pwAction" value="">
+					<div class="flex gap-2 justify-end pt-1">
+						<button type="button" id="pwCancel" class="px-4 py-2 rounded-xl border border-gray-300 hover:bg-gray-50">취소</button>
+						<button type="submit" class="px-4 py-2 rounded-xl bg-orange-500 text-white font-semibold hover:bg-orange-600">확인</button>
+					</div>
+				</form>
+			</div>
+		</div>
+		<script src="mypage.js" type="module"></script>
+		<div id="progressModal" class="hidden fixed inset-0 z-50 items-center justify-center">
+	<div class="absolute inset-0 bg-black/40"></div>
+	<div class="relative bg-white rounded-xl shadow-xl w-full max-w-md p-6">
+		<h3 class="text-lg font-semibold mb-3">정보 업데이트 중…</h3>
+		<div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+			<div id="progressBar" class="bg-blue-500 h-3" style="width:0%;"></div>
+		</div>
+		<p id="progressText" class="text-sm text-gray-600 mt-3">준비 중…</p>
+	</div>
+</div>
+	</body>
+</html>
